@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>뉴스 스크래핑 - {{ keyword }}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 2em;
+        }
+
+        .search-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .search-form input[type="text"] {
+            flex: 1;
+            padding: 12px 20px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .search-form input[type="number"] {
+            width: 100px;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .search-form button {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .search-form button:hover {
+            transform: translateY(-2px);
+        }
+
+        .info {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .news-grid {
+            display: grid;
+            gap: 20px;
+        }
+
+        .news-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .news-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .news-number {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 30px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .news-title {
+            font-size: 1.3em;
+            color: #333;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+
+        .news-meta {
+            color: #888;
+            font-size: 0.9em;
+            margin: 10px 0;
+            display: flex;
+            gap: 15px;
+        }
+
+        .news-meta span {
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .news-summary {
+            color: #555;
+            line-height: 1.6;
+            margin: 15px 0;
+        }
+
+        .news-link {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 8px 20px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 0.9em;
+            transition: background 0.3s;
+        }
+
+        .news-link:hover {
+            background: #764ba2;
+        }
+
+        .no-results {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            text-align: center;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📰 뉴스 스크래핑</h1>
+
+            <form class="search-form" method="GET" action="/">
+                <input type="text" name="keyword" value="{{ keyword }}" placeholder="검색 키워드 입력">
+                <input type="number" name="display" value="{{ display }}" min="1" max="100" placeholder="개수">
+                <button type="submit">검색</button>
+            </form>
+
+            <div class="info">
+                총 <strong>{{ total }}</strong>개의 뉴스 | 업데이트: {{ current_time }}
+            </div>
+        </div>
+
+        {% if news_list %}
+        <div class="news-grid">
+            {% for news in news_list %}
+            <div class="news-card">
+                <div class="news-number">{{ news['번호'] }}</div>
+                <div class="news-title">{{ news['제목'] }}</div>
+                <div class="news-meta">
+                    <span>📺 {{ news['언론사'] }}</span>
+                    <span>🕐 {{ news['날짜'] }}</span>
+                </div>
+                <div class="news-summary">{{ news['요약'] }}</div>
+                <a href="{{ news['링크'] }}" target="_blank" class="news-link">기사 읽기 →</a>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="no-results">
+            <h2>검색 결과가 없습니다</h2>
+            <p>다른 키워드로 검색해보세요.</p>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>

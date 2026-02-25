@@ -1,0 +1,13 @@
+# Compiled files
+*.exe
+*.class
+
+# Python cache
+*.pyc
+__pycache__/
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+
+# CSV data files
+*.csv
