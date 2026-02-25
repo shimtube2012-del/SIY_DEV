@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python lottery_ball.py:*)",
+      "Bash(git commit:*)"
+    ]
+  }
+}

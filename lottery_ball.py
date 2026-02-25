@@ -37,6 +37,7 @@ font_large = pygame.font.Font(font_path, 52)
 font_medium = pygame.font.Font(font_path, 32)
 font_small = pygame.font.Font(font_path, 24)
 font_tiny = pygame.font.Font(font_path, 18)
+font_countdown = pygame.font.Font(font_path, 100)
 
 # 게임 영역 설정
 GAME_LEFT = 50
@@ -51,6 +52,9 @@ FUNNEL_HEIGHT = 120
 FUNNEL_X = SCREEN_WIDTH // 2
 FUNNEL_TOP_Y = GAME_BOTTOM
 FUNNEL_BOTTOM_Y = FUNNEL_TOP_Y + FUNNEL_HEIGHT
+
+# 속도 제한
+MAX_SPEED = 15
 
 # 장애물(못) 클래스
 class Peg:
@@ -205,18 +209,45 @@ class BouncePad:
         pygame.draw.rect(surface, DARK_GRAY, rect, border_radius=5)
         pygame.draw.rect(surface, color, (rect.x + 2, rect.y + 2, rect.width - 4, rect.height - 4), border_radius=4)
 
+# 파티클 클래스 (당첨 연출용)
+class Particle:
+    def __init__(self, x, y, color):
+        self.x = x
+        self.y = y
+        self.color = color
+        self.dx = random.uniform(-5, 5)
+        self.dy = random.uniform(-8, -1)
+        self.gravity = 0.15
+        self.max_lifetime = random.randint(40, 80)
+        self.lifetime = self.max_lifetime
+        self.radius = random.randint(3, 7)
+
+    def update(self):
+        self.dy += self.gravity
+        self.x += self.dx
+        self.y += self.dy
+        self.lifetime -= 1
+        return self.lifetime > 0
+
+    def draw(self, surface):
+        factor = max(0, self.lifetime / self.max_lifetime)
+        r, g, b = self.color
+        color = (int(r * factor), int(g * factor), int(b * factor))
+        pygame.draw.circle(surface, color, (int(self.x), int(self.y)), max(1, int(self.radius * factor)))
+
 # 공 클래스
 class Ball:
-    def __init__(self, name, color, start_x):
+    def __init__(self, name, color, start_x, start_y=None):
         self.name = name
         self.color = color
         self.radius = 16
         self.start_x = start_x
+        self.start_y = start_y if start_y is not None else GAME_TOP + 25
         self.reset_position()
 
     def reset_position(self):
         self.x = self.start_x
-        self.y = GAME_TOP + 25
+        self.y = self.start_y
         self.dx = 0
         self.dy = 0
         self.gravity = 0.4
@@ -225,9 +256,10 @@ class Ball:
         self.finished = False
         self.winner = False
         self.pulse = 0
-        self.stuck_count = 0  # 갇힘 카운트
-        self.last_y = self.y  # 이전 y 위치
-        self.stuck_timer = 0  # 같은 위치에 머문 시간
+        self.stuck_count = 0
+        self.last_x = self.x
+        self.last_y = self.y
+        self.stuck_timer = 0
 
     def move(self, pegs, platforms, spinners, bounce_pads, balls, game_started, maze_broken):
         if self.finished:
@@ -238,6 +270,11 @@ class Ball:
 
         self.dy += self.gravity
         self.dx *= self.friction
+
+        # 속도 제한 (관통 방지)
+        self.dx = max(-MAX_SPEED, min(MAX_SPEED, self.dx))
+        self.dy = max(-MAX_SPEED, min(MAX_SPEED, self.dy))
+
         self.x += self.dx
         self.y += self.dy
 
@@ -285,16 +322,17 @@ class Ball:
             for pad in bounce_pads:
                 pad.collide(self)
 
-            # 갇힘 감지: y 위치가 거의 변하지 않으면 갇힌 것으로 판단
-            y_movement = abs(self.y - self.last_y)
-            if y_movement < 2:  # y 방향으로 거의 안 움직임
+            # 갇힘 감지: X+Y 총 이동거리로 판단
+            total_movement = abs(self.x - self.last_x) + abs(self.y - self.last_y)
+            if total_movement < 3:
                 self.stuck_timer += 1
-                if self.stuck_timer >= 30:  # 0.5초 동안 갇혀있으면
+                if self.stuck_timer >= 30:
                     self.stuck_count += 1
                     self.stuck_timer = 0
             else:
-                self.stuck_timer = 0  # 움직이면 타이머 리셋
+                self.stuck_timer = 0
 
+            self.last_x = self.x
             self.last_y = self.y
 
         # 깔때기 영역
@@ -438,6 +476,17 @@ class Button:
     def is_clicked(self, pos):
         return self.enabled and self.rect.collidepoint(pos)
 
+# 공 시작 위치 계산 (균등 분할, 여러 줄)
+def calculate_start_position(index):
+    cols = 5
+    row = index // cols
+    col = index % cols
+    area_width = GAME_RIGHT - GAME_LEFT - 100
+    col_width = area_width / cols
+    x = GAME_LEFT + 50 + col * col_width + col_width / 2 + random.randint(-15, 15)
+    y = GAME_TOP + 25 + row * 40
+    return x, y
+
 # 미로 생성
 def create_maze():
     pegs = []
@@ -522,13 +571,23 @@ def main():
     retry_button = Button(345, 25, 80, 40, "재시작", BLUE)
     reset_button = Button(435, 25, 80, 40, "초기화", GRAY)
 
+    # 배속 버튼
+    speed_buttons = [
+        Button(700, 25, 50, 40, "x1", LIGHT_GRAY),
+        Button(755, 25, 50, 40, "x2", LIGHT_GRAY),
+        Button(810, 25, 50, 40, "x3", LIGHT_GRAY),
+    ]
+
     balls = []
-    names_colors = []  # 이름과 색상 저장
+    names_colors = []  # (이름, 색상) 저장
     color_index = 0
     winner = None
     game_started = False
     maze_broken = False
-    max_hits = 100  # 미로 파괴에 필요한 갇힘 횟수
+    max_hits = 100
+    countdown = 0
+    speed_multiplier = 1
+    particles = []
 
     # 미로 생성
     pegs, platforms, spinners, bounce_pads = create_maze()
@@ -539,45 +598,50 @@ def main():
             if event.type == pygame.QUIT:
                 running = False
 
-            if not game_started:
+            # 배속 버튼 (항상 처리)
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                for i, btn in enumerate(speed_buttons):
+                    if btn.is_clicked(event.pos):
+                        speed_multiplier = i + 1
+
+            if not game_started and countdown == 0:
                 name = input_box.handle_event(event)
                 if name and len(balls) < 15:
-                    color = BALL_COLORS[color_index % len(BALL_COLORS)]
-                    start_x = GAME_LEFT + 70 + (len(balls) % 5) * 155 + random.randint(-15, 15)
-                    balls.append(Ball(name, color, start_x))
-                    names_colors.append((name, color, start_x))
-                    color_index += 1
+                    # 중복 이름 방지
+                    if not any(nc[0] == name for nc in names_colors):
+                        color = BALL_COLORS[color_index % len(BALL_COLORS)]
+                        start_x, start_y = calculate_start_position(len(balls))
+                        balls.append(Ball(name, color, start_x, start_y))
+                        names_colors.append((name, color))
+                        color_index += 1
 
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if add_button.is_clicked(event.pos):
                         name = input_box.text.strip()
-                        if name and len(balls) < 15:
+                        if name and len(balls) < 15 and not any(nc[0] == name for nc in names_colors):
                             color = BALL_COLORS[color_index % len(BALL_COLORS)]
-                            start_x = GAME_LEFT + 70 + (len(balls) % 5) * 155 + random.randint(-15, 15)
-                            balls.append(Ball(name, color, start_x))
-                            names_colors.append((name, color, start_x))
+                            start_x, start_y = calculate_start_position(len(balls))
+                            balls.append(Ball(name, color, start_x, start_y))
+                            names_colors.append((name, color))
                             color_index += 1
-                            input_box.text = ""
-                            input_box.composing = ""
+                        input_box.text = ""
+                        input_box.composing = ""
 
                     elif start_button.is_clicked(event.pos) and len(balls) >= 2:
-                        game_started = True
-                        for ball in balls:
-                            ball.dx = random.uniform(-2, 2)
-                            ball.dy = random.uniform(3, 6)
+                        countdown = 180  # 3초 카운트다운
 
                     elif retry_button.is_clicked(event.pos) and len(names_colors) >= 2:
                         # 같은 참가자로 재시작
                         balls = []
-                        for name, color, start_x in names_colors:
-                            new_start_x = start_x + random.randint(-30, 30)
-                            balls.append(Ball(name, color, new_start_x))
+                        for i, (n, c) in enumerate(names_colors):
+                            sx, sy = calculate_start_position(i)
+                            balls.append(Ball(n, c, sx, sy))
                         winner = None
                         game_started = False
                         maze_broken = False
-                        # 못 상태 초기화
-                        for peg in pegs:
-                            peg.hit = False
+                        countdown = 0
+                        particles = []
+                        pegs, platforms, spinners, bounce_pads = create_maze()
 
                     elif reset_button.is_clicked(event.pos):
                         balls = []
@@ -586,19 +650,23 @@ def main():
                         game_started = False
                         maze_broken = False
                         color_index = 0
+                        countdown = 0
+                        particles = []
+                        pegs, platforms, spinners, bounce_pads = create_maze()
 
             else:
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if retry_button.is_clicked(event.pos) and len(names_colors) >= 2:
                         balls = []
-                        for name, color, start_x in names_colors:
-                            new_start_x = start_x + random.randint(-30, 30)
-                            balls.append(Ball(name, color, new_start_x))
+                        for i, (n, c) in enumerate(names_colors):
+                            sx, sy = calculate_start_position(i)
+                            balls.append(Ball(n, c, sx, sy))
                         winner = None
                         game_started = False
                         maze_broken = False
-                        for peg in pegs:
-                            peg.hit = False
+                        countdown = 0
+                        particles = []
+                        pegs, platforms, spinners, bounce_pads = create_maze()
 
                     elif reset_button.is_clicked(event.pos):
                         balls = []
@@ -607,34 +675,56 @@ def main():
                         game_started = False
                         maze_broken = False
                         color_index = 0
+                        countdown = 0
+                        particles = []
+                        pegs, platforms, spinners, bounce_pads = create_maze()
 
-        # 회전 장애물 업데이트
-        if not maze_broken:
-            for spinner in spinners:
-                spinner.update()
+        # 카운트다운 처리
+        if countdown > 0:
+            countdown -= 1
+            if countdown == 0:
+                game_started = True
+                for ball in balls:
+                    ball.dx = random.uniform(-2, 2)
+                    ball.dy = random.uniform(3, 6)
 
-        # 바운스 패드 업데이트
-        for pad in bounce_pads:
-            pad.update()
+        # 회전 장애물/바운스 패드 업데이트 + 공 이동 (배속 적용)
+        for _ in range(speed_multiplier):
+            if not maze_broken:
+                for spinner in spinners:
+                    spinner.update()
 
-        # 공 이동
-        for ball in balls:
-            ball.move(pegs, platforms, spinners, bounce_pads, balls, game_started, maze_broken)
+            for pad in bounce_pads:
+                pad.update()
 
-        # 미로 파괴 체크 (공이 갇혀서 30번 카운트되면 미로 파괴)
+            for ball in balls:
+                ball.move(pegs, platforms, spinners, bounce_pads, balls, game_started, maze_broken)
+
+        # 미로 파괴 체크
         if game_started and not maze_broken:
             total_stuck = sum(ball.stuck_count for ball in balls)
             if total_stuck >= max_hits:
                 maze_broken = True
 
-        # 당첨자 확인
+        # 당첨자 확인 (동시 도착 시 y 좌표가 가장 큰 공 선택)
         if game_started and not winner:
-            for ball in balls:
-                if ball.finished and not winner:
-                    winner = ball
-                    ball.winner = True
-                    ball.x = FUNNEL_X
-                    ball.y = FUNNEL_BOTTOM_Y + 65
+            finished_balls = [ball for ball in balls if ball.finished]
+            if finished_balls:
+                winner = max(finished_balls, key=lambda b: b.y)
+                winner.winner = True
+                winner.x = FUNNEL_X
+                winner.y = FUNNEL_BOTTOM_Y + 65
+                # 당첨 파티클 생성
+                for _ in range(30):
+                    particles.append(Particle(winner.x, winner.y,
+                        random.choice([GOLD, RED, YELLOW, GREEN, BLUE, PURPLE, PINK, CYAN])))
+
+        # 파티클 업데이트
+        particles = [p for p in particles if p.update()]
+        # 당첨자가 있으면 지속적으로 파티클 생성
+        if winner and random.random() < 0.3:
+            particles.append(Particle(winner.x, winner.y,
+                random.choice([GOLD, RED, YELLOW, GREEN, BLUE, PURPLE, PINK, CYAN])))
 
         # 화면 그리기
         screen.fill((25, 25, 45))
@@ -659,13 +749,25 @@ def main():
 
         # UI 그리기
         input_box.draw(screen)
-        add_button.enabled = not game_started and len(balls) < 15
-        start_button.enabled = not game_started and len(balls) >= 2
+        add_button.enabled = not game_started and countdown == 0 and len(balls) < 15
+        start_button.enabled = not game_started and countdown == 0 and len(balls) >= 2
         retry_button.enabled = len(names_colors) >= 2
         add_button.draw(screen)
         start_button.draw(screen)
         retry_button.draw(screen)
         reset_button.draw(screen)
+
+        # 배속 버튼 그리기
+        for i, btn in enumerate(speed_buttons):
+            if i + 1 == speed_multiplier:
+                # 선택된 배속 버튼 강조
+                pygame.draw.rect(screen, GOLD, btn.rect, border_radius=8)
+                pygame.draw.rect(screen, BLACK, btn.rect, 2, border_radius=8)
+                text_surface = font_small.render(btn.text, True, BLACK)
+                text_rect = text_surface.get_rect(center=btn.rect.center)
+                screen.blit(text_surface, text_rect)
+            else:
+                btn.draw(screen)
 
         # 참가자 수 표시
         count_text = font_tiny.render(f"참가자: {len(balls)}/15명", True, WHITE)
@@ -678,16 +780,22 @@ def main():
                 stuck_text = font_small.render(f"갇힘: {total_stuck}/{max_hits}", True, ORANGE)
                 screen.blit(stuck_text, (GAME_LEFT + 10, GAME_TOP + 10))
         elif maze_broken:
-            broken_text = font_small.render("💥 미로 파괴! 💥", True, RED)
+            broken_text = font_small.render("*** 미로 파괴! ***", True, RED)
             screen.blit(broken_text, (GAME_LEFT + 10, GAME_TOP + 10))
 
-        # 참가자 목록 표시
+        # 참가자 목록 표시 (하단 영역)
         if names_colors:
-            names_str = ", ".join([n[0] for n in names_colors])
-            if len(names_str) > 40:
-                names_str = names_str[:37] + "..."
-            names_text = font_tiny.render(f"[{names_str}]", True, LIGHT_GRAY)
-            screen.blit(names_text, (620, 35))
+            items_per_row = min(len(names_colors), 8)
+            for i, (name, color) in enumerate(names_colors):
+                row = i // items_per_row
+                col = i % items_per_row
+                item_width = (GAME_RIGHT - GAME_LEFT) / items_per_row
+                x = GAME_LEFT + col * item_width + 15
+                y = 780 + row * 25
+                pygame.draw.circle(screen, color, (int(x), int(y + 10)), 8)
+                pygame.draw.circle(screen, WHITE, (int(x), int(y + 10)), 8, 1)
+                name_text = font_tiny.render(name, True, WHITE)
+                screen.blit(name_text, (int(x + 14), int(y)))
 
         # 안내 문구
         if len(balls) < 2 and not game_started:
@@ -700,6 +808,21 @@ def main():
             if not ball.finished or ball.winner:
                 ball.draw(screen)
 
+        # 파티클 그리기
+        for p in particles:
+            p.draw(screen)
+
+        # 카운트다운 표시
+        if countdown > 0:
+            count_num = math.ceil(countdown / 60)
+            count_surface = font_countdown.render(str(count_num), True, GOLD)
+            count_rect = count_surface.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 50))
+            overlay = pygame.Surface((200, 150))
+            overlay.fill(BLACK)
+            overlay.set_alpha(150)
+            screen.blit(overlay, (count_rect.centerx - 100, count_rect.centery - 75))
+            screen.blit(count_surface, count_rect)
+
         # 당첨자 표시
         if winner:
             overlay = pygame.Surface((SCREEN_WIDTH, 80))
@@ -707,7 +830,7 @@ def main():
             overlay.set_alpha(220)
             screen.blit(overlay, (0, SCREEN_HEIGHT - 100))
 
-            winner_text = font_large.render(f"🎉 {winner.name} 당첨! 🎉", True, GOLD)
+            winner_text = font_large.render(f"★ {winner.name} 당첨! ★", True, GOLD)
             winner_rect = winner_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 60))
             screen.blit(winner_text, winner_rect)
 
