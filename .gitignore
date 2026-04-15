@@ -12,14 +12,73 @@ __pycache__/
 # CSV data files
 *.csv
 
-# Large binary files
-*.pdf
-*.hwpx
-hwpx/
-
 # Obsidian
 .obsidian/
 
 # 영일피혁 project folder (large PDFs)
 영일피혁/
 .aider*
+
+# Document files (git은 소스코드와 마크다운만 관리)
+*.pdf
+*.hwp
+*.hwpx
+*.doc
+*.docx
+*.xls
+*.xlsx
+*.ppt
+*.pptx
+*.odt
+*.ods
+*.odp
+*.rtf
+hwpx/
+
+# Archives
+*.zip
+*.rar
+*.7z
+*.tar
+*.tar.gz
+*.tgz
+*.gz
+
+# Images
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.bmp
+*.tiff
+*.webp
+*.ico
+*.svg
+
+# Audio / Video
+*.mp3
+*.wav
+*.flac
+*.ogg
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.webm
+
+# Fonts
+*.ttf
+*.otf
+*.woff
+*.woff2
+
+# Datasets / Binary data
+*.parquet
+*.npy
+*.npz
+*.pkl
+*.pickle
+*.h5
+*.db
+*.sqlite
+*.sqlite3
