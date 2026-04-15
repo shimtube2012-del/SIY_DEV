@@ -11,3 +11,15 @@ __pycache__/
 
 # CSV data files
 *.csv
+
+# Large binary files
+*.pdf
+*.hwpx
+hwpx/
+
+# Obsidian
+.obsidian/
+
+# 영일피혁 project folder (large PDFs)
+영일피혁/
+.aider*
