@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Axios npm 공급망 사건으로 바라본 바이브코딩의 유의점</title>
+<style>
+@page { size: A4; margin: 10mm 13mm 7mm 13mm; }
+* { box-sizing: border-box; }
+html, body {
+  font-family: "Malgun Gothic", "맑은 고딕", sans-serif;
+  font-size: 9pt;
+  line-height: 1.52;
+  color: #222;
+  margin: 0;
+}
+.tag { font-size: 8pt; color: #4a6a8a; letter-spacing: 0.3px; }
+h1 {
+  font-size: 15pt;
+  color: #0b3a6b;
+  margin: 3px 0 2px 0;
+  border-bottom: 2pt solid #0b3a6b;
+  padding-bottom: 4px;
+  letter-spacing: -0.3px;
+}
+.sub { display: flex; justify-content: space-between; font-size: 8.5pt; color: #555; margin-bottom: 6px; }
+h2 {
+  font-size: 9.5pt;
+  color: #fff;
+  background: #0b3a6b;
+  padding: 2.3px 7px;
+  margin: 5px 0 3px 0;
+  border-radius: 2px;
+}
+p { margin: 2px 0 2px 0; }
+ul { margin: 1px 0 2px 17px; padding: 0; }
+li { margin: 1.5px 0; }
+table { width: 100%; border-collapse: collapse; margin: 1px 0; }
+th, td { border: 0.6pt solid #9fb4cc; padding: 3px 6px; vertical-align: top; text-align: left; }
+th { background: #eaf1fa; color: #0b3a6b; width: 18%; font-weight: 600; }
+b { color: #0b3a6b; }
+.two { display: flex; gap: 12px; }
+.two > div { flex: 1; }
+.two h3 { font-size: 9pt; color: #0b3a6b; margin: 3px 0 3px 0; }
+.foot {
+  margin-top: 3px;
+  padding-top: 2px;
+  border-top: 0.6pt solid #9fb4cc;
+  font-size: 7.5pt;
+  color: #666;
+  text-align: center;
+}
+.lede { background: #fff6e6; border-left: 2.5pt solid #d98c00; padding: 4px 9px; margin: 3px 0 4px 0; }
+.note { background: #eef5ff; border-left: 2.5pt solid #2a6fbf; padding: 4px 10px; margin: 3px 0 4px 0; }
+.note b { color: #0b3a6b; }
+</style>
+</head>
+<body>
+
+<div class="tag">IBK 기업은행 · 디지털/보안 내부검토</div>
+<h1>Axios npm 공급망 사건으로 바라본 바이브코딩의 유의점</h1>
+<div class="sub"><span>— 비개발자도 이해할 수 있도록 작성 —</span><span>작성: IBK기업은행 디지털혁신부 · 2026-04-13</span></div>
+
+<h2>1. 보고 배경</h2>
+<p>최근 <b>"AI에게 말로 시키면 AI가 대신 프로그램을 짜주는" 개발 방식</b>(이른바 바이브코딩, Vibe Coding)이 관심을 받고 있음. 대표 도구가 Claude Code이며, 당행에서는 현재 <b>일부 직원이 개인 노트북에서 실험적으로 써보는 수준</b>임. 행내망과 인터넷망이 물리적으로 분리되어 있어 외부의 위협이 행내 업무시스템까지 직접 전파되기는 어려우나, 2026년 3월 해외에서 발생한 <b>Axios npm 사건</b>은 "AI가 알아서 부품을 가져다 쓰는" 이 방식이 품고 있는 구조적 위험을 잘 보여주었기에, 향후 행내 정식 도입을 검토할 때 미리 알고 있어야 할 사항을 공유하고자 함.</p>
+
+<div class="note"><b>먼저 알아둘 개념</b> — 프로그램은 모든 기능을 처음부터 짜지 않고, 인터넷의 공용 <b>"부품 창고"</b>에서 조각을 가져와 조립하듯 만듦. 그 창고 중 가장 큰 것이 <b>npm</b>이며, 거기서 가장 많이 쓰이는 부품 하나가 <b>Axios</b>(웹·앱이 서버와 통신할 때 쓰는 기본 부품, 주간 1억+ 회 사용)임. 이번에 누군가 이 인기 부품에 몰래 악성 코드를 심어 창고에 올려버렸고, 이를 받아 쓴 전 세계 개발자 PC가 <b>설치 즉시 원격 조종 프로그램</b>에 감염되어 비밀번호·계정 키가 유출됨.</div>
+
+<h2>2. 사건 요약 — Axios npm 사건 (2026.03.31)</h2>
+<table>
+<tr><th>누구를 노렸나</th><td>전 세계 수백만 개발자가 쓰는 가장 인기 있는 "통신 부품" <b>Axios</b> (주간 1억+ 회 사용)</td></tr>
+<tr><th>어떻게 침투</th><td>부품 관리자의 계정을 탈취 → 담당자인 척 <b>악성 버전을 창고에 직접 올림</b></td></tr>
+<tr><th>어떻게 속였나</th><td>원래 부품 내용은 그대로 두고, 설명서에 이름이 비슷한 <b>가짜 부품(plain-crypto-js)</b> 한 줄만 몰래 끼워넣음 → 기존 보안 검사 도구가 이상을 감지하지 못함</td></tr>
+<tr><th>어떻게 작동</th><td>개발자가 부품을 내려받는 순간 <b>"설치 직후 자동 실행"</b> 기능으로 원격 조종 악성 프로그램이 깔림</td></tr>
+<tr><th>피해 범위</th><td>Windows·Mac·Linux 가리지 않음. 개발자 PC에 저장된 <b>각종 비밀번호·인증서·클라우드 계정 키·환경설정 파일</b>이 외부로 유출되고, 컴퓨터 재부팅 후에도 숨어 있음</td></tr>
+</table>
+
+<h2>3. 바이브코딩이 특별히 더 위험한 이유</h2>
+<div class="lede"><b>핵심:</b> 일반 개발자는 부품을 가져올 때 "이거 써도 될까?" 한 번이라도 살피지만, 바이브코딩은 사람이 "이 기능 만들어줘"라고 말만 하면 <b>AI가 알아서 부품을 고르고 설치까지 진행</b>함. 사람이 마지막으로 확인하는 단계가 사라지는 셈이라, Axios처럼 가짜가 섞여 있어도 사용자가 모른 채 그대로 컴퓨터에 깔릴 수 있음.</div>
+<ul>
+<li><b>사람 점검이 사라짐</b> — AI가 알아서 설치하므로, 실제로 어떤 부품이 들어왔는지 사용자 본인도 잘 모름</li>
+<li><b>개인 노트북 유출 가능성</b> — 현재 실험 중인 노트북이 감염될 경우, 그 안에 저장된 개인 이메일·외부 서비스 로그인 정보·업무 메모 등이 외부로 빠져나갈 수 있음</li>
+<li><b>행내 확산 우려(향후)</b> — 정식 도입 후에는 여러 직원의 자동 빌드·배포 시스템까지 같은 경로로 오염될 수 있음</li>
+<li><b>확장 기능이 많음</b> — Claude Code는 AI에 기능을 덧붙이는 "플러그인"을 손쉽게 설치할 수 있어, 일반 개발 환경보다 위험 진입 경로가 더 많음</li>
+</ul>
+
+<h2>4. 행내 도입 시 유의사항 (건의)</h2>
+<div class="two">
+<div>
+<h3>[현재 — 개인 실험 단계]</h3>
+<ul>
+<li>실험 중인 직원에게 <b>업무 계정과 실험용 계정을 분리</b>해 쓰도록 안내</li>
+<li>실험용 노트북에 행내 중요 비밀번호·인증서를 <b>보관하지 않도록</b> 권고</li>
+<li>Axios 같은 실제 사례를 주기적으로 공유해 <b>"AI가 알아서 설치"의 위험성</b>을 지속 인지</li>
+</ul>
+</div>
+<div>
+<h3>[향후 — 행내 정식 도입 시]</h3>
+<ul>
+<li>AI가 새 부품을 설치하거나 명령을 실행할 때는 <b>사람이 먼저 승인</b>하도록 절차 마련</li>
+<li>세상에 갓 올라온 부품은 며칠 지나서야 쓸 수 있게 <b>"지연 설치"</b> 규칙 적용 (악성 부품은 대개 몇 시간 내 발견·삭제됨)</li>
+<li>공급망 사고를 빠르게 잡아주는 <b>전용 보안 검사 도구</b>를 자동 빌드 과정에 연결</li>
+<li>바이브코딩 전용 <b>격리 공간(샌드박스/컨테이너)</b>에서만 사용하도록 표준화</li>
+<li>AI 플러그인은 <b>사내에서 허용한 목록</b>만 쓰도록 미리 지정</li>
+</ul>
+</div>
+</div>
+
+<h2>5. 결론</h2>
+<p>망분리 환경과 실험 단계라는 점에서 지금 당장 큰 사고로 이어질 가능성은 낮음. 그러나 <b>"AI가 알아서 설치"</b>는 곧 <b>"검증되지 않은 코드의 자동 실행"</b>을 의미하며, Axios 사건이 그 위험을 분명히 보여주었음. 향후 바이브코딩을 행내 정식 도입할 때에는 유의사항을 반영한 통제 체계를 먼저 마련한 뒤 단계적으로 확대할 필요가 있으며, 그 전까지는 실험 단계의 보안 인식 제고를 지속해 나가고자 함.</p>
+
+<div class="foot">IBK 기업은행 디지털혁신부 · 공개 공급망 공격 분석 자료(2026.03 Axios 사건) 기반 · 대외주의</div>
+
+</body>
+</html>

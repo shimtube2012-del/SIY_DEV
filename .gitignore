@@ -82,3 +82,10 @@ hwpx/
 *.db
 *.sqlite
 *.sqlite3
+
+# Claude Code local settings
+**/.claude/settings.local.json
+
+# Nested git repos
+hwpx-mcp/
+ibk_shopping_mall/

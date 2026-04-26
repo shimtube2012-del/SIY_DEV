@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>로컬 LLM 하드웨어 구매전략보고서</title>
+<style>
+  @page {
+    size: A4;
+    margin: 20mm 18mm 25mm 18mm;
+  }
+  /* ── Page numbers added via Python post-processing ── */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Malgun Gothic', '맑은 고딕', 'Noto Sans KR', sans-serif;
+    font-size: 10.5pt;
+    line-height: 1.7;
+    color: #1a1a2e;
+    background: #fff;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* ── Cover Page ── */
+  .cover {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    text-align: center;
+    page-break-after: always;
+    background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+    color: #fff;
+    padding: 40px;
+  }
+  .cover-icon { font-size: 64pt; margin-bottom: 20px; }
+  .cover h1 {
+    font-size: 26pt;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    margin-bottom: 12px;
+    line-height: 1.3;
+  }
+  .cover .subtitle {
+    font-size: 14pt;
+    color: #a8a4ce;
+    margin-bottom: 40px;
+  }
+  .cover-meta {
+    display: flex;
+    gap: 30px;
+    font-size: 10pt;
+    color: #c8c4ee;
+  }
+  .cover-meta div { display: flex; align-items: center; gap: 6px; }
+  .cover-badge {
+    margin-top: 50px;
+    display: inline-block;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 24px;
+    padding: 10px 28px;
+    font-size: 11pt;
+    color: #e0ddff;
+  }
+
+  /* ── TOC ── */
+  .toc { page-break-after: always; padding: 40px 0; }
+  .toc h2 {
+    font-size: 18pt;
+    color: #302b63;
+    border-bottom: 3px solid #302b63;
+    padding-bottom: 8px;
+    margin-bottom: 24px;
+  }
+  .toc-list { list-style: none; }
+  .toc-list li {
+    padding: 8px 0;
+    border-bottom: 1px dotted #ccc;
+    display: flex;
+    justify-content: space-between;
+    font-size: 11pt;
+  }
+  .toc-list li.chapter { font-weight: 700; color: #302b63; font-size: 12pt; margin-top: 8px; }
+  .toc-list li .page { color: #888; }
+
+  /* ── Section Headers ── */
+  .chapter-header {
+    background: linear-gradient(135deg, #302b63, #24243e);
+    color: #fff;
+    padding: 18px 24px;
+    border-radius: 8px;
+    margin: 32px 0 20px 0;
+    page-break-after: avoid;
+  }
+  .chapter-header h2 { font-size: 16pt; font-weight: 700; }
+  .chapter-header .chapter-num {
+    font-size: 10pt;
+    color: #a8a4ce;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 4px;
+  }
+
+  h3 {
+    font-size: 13pt;
+    color: #302b63;
+    margin: 24px 0 12px 0;
+    padding-bottom: 6px;
+    border-bottom: 2px solid #e8e6f0;
+    page-break-after: avoid;
+  }
+  h4 {
+    font-size: 11pt;
+    color: #4a4580;
+    margin: 16px 0 8px 0;
+    page-break-after: avoid;
+  }
+
+  /* ── Tables ── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0 20px 0;
+    font-size: 9.5pt;
+    page-break-inside: avoid;
+  }
+  thead th {
+    background: #302b63;
+    color: #fff;
+    padding: 10px 12px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 9pt;
+    letter-spacing: 0.3px;
+  }
+  thead th:first-child { border-radius: 6px 0 0 0; }
+  thead th:last-child { border-radius: 0 6px 0 0; }
+  tbody td {
+    padding: 9px 12px;
+    border-bottom: 1px solid #e8e6f0;
+    vertical-align: top;
+  }
+  tbody tr:nth-child(even) { background: #f8f7fc; }
+  tbody tr:hover { background: #eee9f7; }
+
+  /* ── Spec Table (노트북 사양) ── */
+  .spec-table th { width: 160px; background: #3d3780; }
+  .spec-table td { font-weight: 500; }
+
+  /* ── Highlight Boxes ── */
+  .box {
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 16px 0;
+    page-break-inside: avoid;
+  }
+  .box-info { background: #eef0ff; border-left: 4px solid #302b63; }
+  .box-success { background: #e8faf0; border-left: 4px solid #0a8f4f; }
+  .box-warning { background: #fff8e6; border-left: 4px solid #d4a017; }
+  .box-danger { background: #fef0f0; border-left: 4px solid #c0392b; }
+  .box-title { font-weight: 700; margin-bottom: 6px; font-size: 10.5pt; }
+  .box-info .box-title { color: #302b63; }
+  .box-success .box-title { color: #0a8f4f; }
+  .box-warning .box-title { color: #b8860b; }
+  .box-danger .box-title { color: #c0392b; }
+
+  /* ── Recommendation Cards ── */
+  .rec-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 16px 0;
+  }
+  .rec-card {
+    border: 2px solid #e8e6f0;
+    border-radius: 10px;
+    padding: 18px;
+    page-break-inside: avoid;
+    position: relative;
+  }
+  .rec-card.best {
+    border-color: #302b63;
+    box-shadow: 0 2px 12px rgba(48,43,99,0.15);
+  }
+  .rec-card.best::after {
+    content: 'BEST';
+    position: absolute;
+    top: -10px;
+    right: 16px;
+    background: #302b63;
+    color: #fff;
+    font-size: 8pt;
+    font-weight: 700;
+    padding: 3px 12px;
+    border-radius: 10px;
+    letter-spacing: 1px;
+  }
+  .rec-card .plan-name {
+    font-size: 13pt;
+    font-weight: 700;
+    color: #302b63;
+    margin-bottom: 4px;
+  }
+  .rec-card .plan-price {
+    font-size: 16pt;
+    font-weight: 800;
+    color: #1a1a2e;
+    margin: 8px 0;
+  }
+  .rec-card .plan-price small { font-size: 9pt; color: #888; font-weight: 400; }
+  .rec-card .plan-models {
+    background: #f8f7fc;
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin: 8px 0;
+    font-size: 9.5pt;
+  }
+  .rec-card .plan-models strong { color: #302b63; }
+  .rec-card ul {
+    list-style: none;
+    margin-top: 8px;
+    font-size: 9pt;
+    color: #555;
+  }
+  .rec-card ul li { padding: 2px 0; }
+  .rec-card ul li::before { content: '✓ '; color: #0a8f4f; font-weight: 700; }
+
+  /* ── Comparison Badges ── */
+  .badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 8.5pt;
+    font-weight: 700;
+  }
+  .badge-good { background: #e8faf0; color: #0a8f4f; }
+  .badge-mid { background: #fff8e6; color: #b8860b; }
+  .badge-bad { background: #fef0f0; color: #c0392b; }
+
+  /* ── Pros/Cons ── */
+  .pros-cons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 12px 0;
+  }
+  .pros, .cons {
+    border-radius: 8px;
+    padding: 14px 16px;
+    font-size: 9.5pt;
+  }
+  .pros { background: #e8faf0; }
+  .cons { background: #fef0f0; }
+  .pros h4 { color: #0a8f4f; margin: 0 0 8px 0; border: none; font-size: 10.5pt; }
+  .cons h4 { color: #c0392b; margin: 0 0 8px 0; border: none; font-size: 10.5pt; }
+  .pros ul, .cons ul { list-style: none; margin: 0; padding: 0; }
+  .pros ul li, .cons ul li { padding: 3px 0; line-height: 1.5; }
+  .pros ul li::before { content: '✓ '; color: #0a8f4f; font-weight: 700; }
+  .cons ul li::before { content: '✗ '; color: #c0392b; font-weight: 700; }
+
+  /* ── Purchase Links ── */
+  .purchase-table td:last-child { color: #302b63; font-size: 8.5pt; word-break: break-all; }
+  .purchase-table .price { font-weight: 700; color: #1a1a2e; white-space: nowrap; }
+
+  /* ── Flowchart ── */
+  .flow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    margin: 20px 0;
+    flex-wrap: wrap;
+  }
+  .flow-step {
+    background: #302b63;
+    color: #fff;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 9.5pt;
+    font-weight: 600;
+    text-align: center;
+  }
+  .flow-step.done { background: #0a8f4f; }
+  .flow-step.current { background: #d4a017; color: #1a1a2e; }
+  .flow-arrow { font-size: 14pt; color: #888; padding: 0 6px; }
+
+  /* ── Footer ── */
+  .footer {
+    margin-top: 40px;
+    padding-top: 16px;
+    border-top: 2px solid #e8e6f0;
+    font-size: 8.5pt;
+    color: #999;
+    text-align: center;
+  }
+
+  /* ── Page Break ── */
+  .page-break { page-break-before: always; }
+
+  /* ── Print Optimization ── */
+  @media print {
+    body { font-size: 10pt; }
+    .cover { min-height: 100vh; }
+    .chapter-header { -webkit-print-color-adjust: exact; }
+    thead th { -webkit-print-color-adjust: exact; }
+    .badge, .pros, .cons, .box { -webkit-print-color-adjust: exact; }
+  }
+
+  /* ── Utility ── */
+  .text-center { text-align: center; }
+  .mt-8 { margin-top: 8px; }
+  .mt-16 { margin-top: 16px; }
+  .mb-16 { margin-bottom: 16px; }
+  .small { font-size: 9pt; color: #777; }
+  strong { color: #1a1a2e; }
+  .highlight { background: #fff3cd; padding: 1px 4px; border-radius: 3px; }
+  a { color: #302b63; text-decoration: underline; }
+  a:hover { color: #5a4fcf; }
+  .purchase-table a {
+    display: inline-block;
+    background: #f0eef8;
+    color: #302b63;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 8.5pt;
+    margin: 2px 0;
+    text-decoration: none;
+    border: 1px solid #d8d4ec;
+  }
+  .purchase-table a::before { content: '🔗 '; }
+  .purchase-table a:hover { background: #e0ddf0; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════ COVER PAGE ═══════════════════════ -->
+<div class="cover">
+  <div class="cover-icon">&#x1F4BB;&#x26A1;</div>
+  <h1>로컬 LLM 하드웨어<br>구매전략보고서</h1>
+  <p class="subtitle">eGPU vs 미니PC 비교 분석 — 예산 100~150만 원</p>
+  <div class="cover-meta">
+    <div>&#x1F4C5; 2026년 4월 6일</div>
+    <div>&#x1F4BB; Galaxy Book4 Pro 16"</div>
+    <div>&#x1F4B0; 100~150만 원</div>
+  </div>
+  <div class="cover-badge">AOOSTAR AG03 &middot; Gemma 3 &middot; Qwen 2.5/3 &middot; Ollama</div>
+
+  <div style="margin-top: 50px; width: 100%; max-width: 600px;">
+    <div style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18); border-radius: 12px; padding: 24px 28px; text-align: left;">
+      <div style="font-size: 10pt; color: #a8a4ce; letter-spacing: 1px; margin-bottom: 10px; text-transform: uppercase;">Galaxy Book4 Pro 16" 기준 결론</div>
+      <div style="font-size: 13pt; font-weight: 700; color: #fff; margin-bottom: 14px; line-height: 1.5;">
+        AOOSTAR AG03 eGPU 독 + GPU 조합이 최적 &mdash;<br>800W PSU 내장, 듀얼 TB5로 GPU + 140W 충전 동시 해결
+      </div>
+      <div style="background: rgba(255,255,255,0.1); border-radius: 8px; padding: 16px 20px; margin-top: 8px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <span style="font-size: 12pt; font-weight: 700; color: #e0ddff;">BEST &#x2192; B안: 신품 안정</span>
+          <span style="background: #0a8f4f; color: #fff; padding: 3px 12px; border-radius: 10px; font-size: 8.5pt; font-weight: 700;">RECOMMENDED</span>
+        </div>
+        <table style="width: 100%; font-size: 9.5pt; color: #c8c4ee; border-collapse: collapse;">
+          <tr><td style="padding: 3px 0; color: #a8a4ce;">구성</td><td style="padding: 3px 0;">AOOSTAR AG03 + <strong style="color:#fff;">RTX 5060 Ti 16GB 신품</strong></td></tr>
+          <tr><td style="padding: 3px 0; color: #a8a4ce;">예상 비용</td><td style="padding: 3px 0;"><strong style="color: #7bed9f; font-size: 12pt;">~114만~139만 원</strong></td></tr>
+          <tr><td style="padding: 3px 0; color: #a8a4ce;">구동 모델</td><td style="padding: 3px 0;">Gemma 3 12B, Qwen 14B (Q4_K_M 쾌적)</td></tr>
+          <tr><td style="padding: 3px 0; color: #a8a4ce;">예상 속도</td><td style="padding: 3px 0;">15~35 tok/s</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ TOC ═══════════════════════ -->
+<div class="toc">
+  <h2>목차</h2>
+  <ul class="toc-list">
+    <li class="chapter"><span>제1장. 현황 분석</span></li>
+    <li><span>&nbsp;&nbsp;&nbsp;&nbsp;1.1 현재 노트북 사양 및 eGPU 호환성</span></li>
+    <li><span>&nbsp;&nbsp;&nbsp;&nbsp;1.2 로컬 LLM의 핵심 병목 요소</span></li>
+    <li class="chapter"><span>제2장. eGPU 독 비교: AOOSTAR AG03 vs ADT-Link TB3</span></li>
+    <li class="chapter"><span>제3장. 방안별 비교 분석</span></li>
+    <li><span>&nbsp;&nbsp;&nbsp;&nbsp;3.1 eGPU 방안 (노트북 + AG03 + GPU)</span></li>
+    <li><span>&nbsp;&nbsp;&nbsp;&nbsp;3.2 미니PC 방안 (독립 시스템)</span></li>
+    <li class="chapter"><span>제4장. eGPU vs 미니PC 장단점 심층 비교</span></li>
+    <li class="chapter"><span>제5장. GPU별 LLM 모델 구동 범위</span></li>
+    <li><span>&nbsp;&nbsp;&nbsp;&nbsp;5.1 Gemma 3 / Qwen 모델별 VRAM 요구량</span></li>
+    <li class="chapter"><span>제6장. 추천 구성안 및 구매 가이드</span></li>
+    <li><span>&nbsp;&nbsp;&nbsp;&nbsp;6.1 구성안 A~D 상세</span></li>
+    <li><span>&nbsp;&nbsp;&nbsp;&nbsp;6.2 구성안별 부품 구매 링크</span></li>
+    <li class="chapter"><span>제7장. 최종 추천 및 구매 로드맵</span></li>
+  </ul>
+</div>
+
+<!-- ═══════════════════════ CHAPTER 1 ═══════════════════════ -->
+<div class="chapter-header">
+  <div class="chapter-num">Chapter 01</div>
+  <h2>현황 분석</h2>
+</div>
+
+<h3>1.1 현재 노트북 사양</h3>
+<table class="spec-table">
+  <thead><tr><th>항목</th><th>사양</th></tr></thead>
+  <tbody>
+    <tr><td><strong>모델명</strong></td><td>삼성 Galaxy Book4 Pro 16인치 (NT960XGK)</td></tr>
+    <tr><td><strong>CPU</strong></td><td>Intel Core Ultra 5 125H (14코어/18스레드, 최대 4.5GHz)</td></tr>
+    <tr><td><strong>RAM</strong></td><td>16GB LPDDR5x (온보드, 증설 불가)</td></tr>
+    <tr><td><strong>내장 GPU</strong></td><td>Intel Arc Graphics (7 Xe-cores) — LLM 구동용으로 부족</td></tr>
+    <tr><td><strong>저장장치</strong></td><td>NVMe SSD (2슬롯)</td></tr>
+    <tr><td><strong>디스플레이</strong></td><td>16인치 WQXGA+ AMOLED (2880×1800, 120Hz)</td></tr>
+    <tr><td><strong>외부 포트</strong></td><td><strong>Thunderbolt 4 × 2</strong> (USB4 호환), USB-A 3.2, HDMI 2.1, MicroSD</td></tr>
+    <tr><td><strong>OS</strong></td><td>Windows 11 Home</td></tr>
+  </tbody>
+</table>
+
+<div class="box box-success">
+  <div class="box-title">&#x2705; eGPU 호환성 판정: 연결 가능</div>
+  TB4/USB4 포트 2개 보유 → AOOSTAR AG03 TB5 포트에 하위 호환으로 연결 가능 (40Gbps)<br>
+  AG03의 TB5 포트는 140W PD 충전 지원 → 케이블 1개로 GPU + 충전 동시 해결<br>
+  <span class="small">※ OCuLink 포트 없음 → AG03의 OCuLink 포트는 사용 불가, TB5→TB4 하위호환으로 연결. 차세대 TB5 노트북 시 80Gbps 활용 가능</span>
+</div>
+
+<h3>1.2 로컬 LLM의 핵심 병목 요소</h3>
+<div class="box box-info">
+  <div class="box-title">&#x1F4A1; 핵심 인사이트: VRAM이 가장 중요하다</div>
+  로컬 LLM 추론에서 성능을 결정하는 요소는 <strong>① VRAM 용량 &gt; ② 메모리 대역폭 &gt; ③ 연산력(TFLOPS)</strong> 순이다.
+  모델 가중치를 GPU 메모리에 전부 올릴 수 있어야 실용적인 속도가 나온다.
+</div>
+
+<table>
+  <thead><tr><th>병목 요소</th><th>설명</th><th>현재 노트북 상태</th></tr></thead>
+  <tbody>
+    <tr><td><strong>VRAM</strong></td><td>모델 가중치를 올리는 GPU 전용 메모리</td><td>내장 GPU 공유 메모리뿐 → <span class="badge badge-bad">부족</span></td></tr>
+    <tr><td><strong>메모리 대역폭</strong></td><td>GPU ↔ VRAM 간 데이터 전송 속도</td><td>내장 GPU ~89GB/s → <span class="badge badge-mid">제한적</span></td></tr>
+    <tr><td><strong>연산력</strong></td><td>행렬 연산 처리 능력 (TFLOPS)</td><td>내장 GPU ~8 TFLOPS → <span class="badge badge-bad">부족</span></td></tr>
+    <tr><td><strong>시스템 RAM</strong></td><td>CPU 오프로드 시 사용</td><td>16GB 고정, 증설 불가 → <span class="badge badge-mid">여유 없음</span></td></tr>
+  </tbody>
+</table>
+
+<!-- ═══════════════════════ CHAPTER 2 ═══════════════════════ -->
+<div class="chapter-header page-break">
+  <div class="chapter-num">Chapter 02</div>
+  <h2>eGPU 독 비교: AOOSTAR AG03 vs ADT-Link R43SG-TB3</h2>
+</div>
+
+<h3>2.1 제품 사양 비교</h3>
+<table>
+  <thead><tr><th>항목</th><th>AOOSTAR AG03</th><th>ADT-Link R43SG-TB3 + 별도 PSU</th></tr></thead>
+  <tbody>
+    <tr><td><strong>유형</strong></td><td>완성형 eGPU 독 (PSU 내장)</td><td>DIY 어댑터 (PSU 별도 구매)</td></tr>
+    <tr><td><strong>내장 PSU</strong></td><td><span class="badge badge-good">800W 내장</span> (GPU 최대 600W)</td><td><span class="badge badge-bad">없음</span> (별도 ATX PSU 필요)</td></tr>
+    <tr><td><strong>연결 포트</strong></td><td><strong>듀얼 Thunderbolt 5</strong> (80Gbps) + OCuLink (PCIe 4.0 x4)</td><td>Thunderbolt 3 전용</td></tr>
+    <tr><td><strong>Galaxy Book4 Pro 연결</strong></td><td>TB5 → TB4 포트 (40Gbps, 하위 호환)</td><td>TB3 → TB4 포트 (40Gbps)</td></tr>
+    <tr><td><strong>PD 충전</strong></td><td><span class="badge badge-good">140W PD 지원</span> → 노트북 충전 동시</td><td><span class="badge badge-bad">미지원</span></td></tr>
+    <tr><td><strong>GPU 길이 제한</strong></td><td>제한 없음 (오픈 프레임)</td><td>제한 없음 (오픈 프레임)</td></tr>
+    <tr><td><strong>크기/무게</strong></td><td>22.5 × 11 × 6cm / 1.5KG</td><td>어댑터만 소형 / PSU 별도 공간</td></tr>
+    <tr><td><strong>핫스왑</strong></td><td><span class="badge badge-good">지원</span></td><td><span class="badge badge-mid">제한적</span></td></tr>
+    <tr><td><strong>가격</strong></td><td><strong>~$219 (~30만 원)</strong></td><td>어댑터 ~23만 원 + PSU ~5.5만 원 = <strong>~28.5만 원</strong></td></tr>
+    <tr><td><strong>구매 난이도</strong></td><td>Amazon/공식몰 직구</td><td>AliExpress 직구 + 국내 PSU 구매</td></tr>
+  </tbody>
+</table>
+
+<div class="box box-success">
+  <div class="box-title">&#x1F3AF; eGPU 독 선정 결론: AOOSTAR AG03 추천</div>
+  <strong>가격은 비슷하지만(~30만 원 vs ~28.5만 원), AG03가 완성도에서 압도적으로 우수하다.</strong><br>
+  &#x2022; 800W PSU 내장 → 별도 파워 불필요, 깔끔한 셋업<br>
+  &#x2022; 듀얼 TB5 + 140W PD → 케이블 1개로 GPU 연결 + 노트북 충전 동시<br>
+  &#x2022; TB5(80Gbps)로 차세대 노트북 업그레이드 시 대역폭 2배 향상<br>
+  &#x2022; RTX 4090급까지 수용 → 향후 GPU 업그레이드에도 대응
+</div>
+
+<!-- ═══════════════════════ CHAPTER 3 ═══════════════════════ -->
+<div class="chapter-header page-break">
+  <div class="chapter-num">Chapter 03</div>
+  <h2>방안별 비교 분석</h2>
+</div>
+
+<h3>3.1 eGPU 방안 — 노트북 + AOOSTAR AG03 + GPU</h3>
+<p>Galaxy Book4 Pro의 TB4/USB4 포트에 AOOSTAR AG03를 연결하고, 데스크톱용 GPU를 장착하는 방안이다.</p>
+
+<h4>AOOSTAR AG03 eGPU 독 사양</h4>
+<table class="spec-table">
+  <thead><tr><th>항목</th><th>사양</th></tr></thead>
+  <tbody>
+    <tr><td><strong>제품명</strong></td><td>AOOSTAR AG03 eGPU Dock (800W PSU 내장)</td></tr>
+    <tr><td><strong>연결</strong></td><td>듀얼 Thunderbolt 5 (80Gbps) + OCuLink (PCIe 4.0 x4, 64Gbps)</td></tr>
+    <tr><td><strong>PSU</strong></td><td>800W 내장 (GPU 최대 500W 공급)</td></tr>
+    <tr><td><strong>PD 충전</strong></td><td>140W Power Delivery (노트북 충전 동시)</td></tr>
+    <tr><td><strong>가격</strong></td><td>~$213~239 USD (~30만~33만 원)</td></tr>
+  </tbody>
+</table>
+
+<h4>GPU 선택지 (2026년 4월 기준)</h4>
+<table>
+  <thead><tr><th>GPU</th><th>VRAM</th><th>가격</th><th>LLM 성능</th><th>평가</th></tr></thead>
+  <tbody>
+    <tr><td><strong>RTX 3090 (중고)</strong></td><td>24GB</td><td class="price">~91만 원 (컴퓨존 AS)<br>~120만 원+ (중고나라)</td><td>Gemma3 27B, Qwen 32B</td><td><span class="badge badge-good">AG03와 예산 내!</span></td></tr>
+    <tr><td><strong>RTX 5060 Ti 16GB</strong></td><td>16GB GDDR7</td><td class="price">~84만~106만 원</td><td>Gemma3 12B, Qwen 14B</td><td><span class="badge badge-good">예산 내 신품</span></td></tr>
+    <tr><td><strong>RTX 3060 12GB (중고)</strong></td><td>12GB</td><td class="price">~35만 원</td><td>Gemma3 4B, Qwen 7B</td><td><span class="badge badge-mid">입문용</span></td></tr>
+  </tbody>
+</table>
+
+<div class="box box-info">
+  <div class="box-title">&#x1F4A1; USB4/TB4 대역폭과 LLM 추론</div>
+  AG03는 TB5(80Gbps)를 지원하지만, Galaxy Book4 Pro의 TB4 포트에 하위 호환으로 연결 시 40Gbps로 동작한다.
+  <strong>LLM 추론에서는 모델을 VRAM에 한 번 로드한 후 GPU 내부에서 연산</strong>이 이루어지므로 호스트-GPU 간 전송량이 적다. 데스크톱 대비 prefill에서 20~30% 느리지만, 토큰 생성 속도 자체는 큰 차이 없음.
+  <br><span class="small">※ AG03는 TB5(80Gbps) + OCuLink(64Gbps)도 지원 → 차세대 TB5 노트북으로 업그레이드 시 대역폭 2배 향상</span>
+</div>
+
+<h3>3.2 미니PC 방안 — 독립 시스템</h3>
+<table>
+  <thead><tr><th>제품</th><th>CPU</th><th>RAM</th><th>가격</th><th>비고</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Minisforum UM890 Pro</strong></td><td>Ryzen 9 8945HS</td><td>16~64GB</td><td class="price">49만~96만 원</td><td>USB4 x2, OCuLink 가능</td></tr>
+    <tr><td><strong>Minisforum MS-S1 Max</strong></td><td>Ryzen AI Max+ 395</td><td>128GB 통합</td><td class="price">~350만 원</td><td><span class="badge badge-bad">예산 초과</span></td></tr>
+  </tbody>
+</table>
+
+<div class="box box-warning">
+  <div class="box-title">&#x26A0; 미니PC 단독 사용의 한계</div>
+  내장 GPU만으로는 7B 이하만 실용적. 외장 GPU가 필요하면 비용 구조가 eGPU 방안과 유사해진다.
+  단, <strong>24시간 상시 가동 LLM 서버</strong>가 목적이라면 미니PC가 유리하다.
+</div>
+
+<!-- ═══════════════════════ CHAPTER 4 ═══════════════════════ -->
+<div class="chapter-header page-break">
+  <div class="chapter-num">Chapter 04</div>
+  <h2>eGPU vs 미니PC 장단점 심층 비교</h2>
+</div>
+
+<h3>4.1 eGPU 방안 (AOOSTAR AG03)</h3>
+<div class="pros-cons">
+  <div class="pros">
+    <h4>&#x1F44D; 장점</h4>
+    <ul>
+      <li>기존 노트북 활용 → <strong>GPU에 예산 집중</strong></li>
+      <li>AG03 = PSU 내장 + 듀얼 TB5 + 140W PD → <strong>케이블 1개 올인원</strong></li>
+      <li>외출 시 분리하면 노트북 이동성 유지</li>
+      <li>기존 디스플레이/키보드/트랙패드 활용</li>
+      <li>LLM 추론에서 USB4 병목 제한적</li>
+      <li>~30만 원으로 합리적인 독 가격</li>
+    </ul>
+  </div>
+  <div class="cons">
+    <h4>&#x1F44E; 단점</h4>
+    <ul>
+      <li>TB4 하위호환 시 40Gbps → prefill 20~30% 하락</li>
+      <li>노트북 RAM 16GB 고정 → CPU 오프로드 여유 부족</li>
+      <li>오픈 프레임 → 먼지, GPU 팬 소음 노출</li>
+      <li>중고 GPU 사용 시 채굴/보증 리스크</li>
+      <li>드라이버/절전모드 호환성 이슈 가능</li>
+      <li>해외직구 필요 (국내 정식 유통 없음)</li>
+    </ul>
+  </div>
+</div>
+
+<h3>4.2 미니PC 방안</h3>
+<div class="pros-cons">
+  <div class="pros">
+    <h4>&#x1F44D; 장점</h4>
+    <ul>
+      <li>독립 LLM 전용 서버 (24시간 상시 가동)</li>
+      <li>OCuLink → USB4보다 높은 대역폭</li>
+      <li>32GB RAM 구성 → CPU 오프로드 여유</li>
+      <li>SSH/API 원격 접속 가능</li>
+      <li>노트북 배터리/성능 부담 없음</li>
+      <li>소형 폼팩터</li>
+    </ul>
+  </div>
+  <div class="cons">
+    <h4>&#x1F44E; 단점</h4>
+    <ul>
+      <li>본체 55~90만 원 → <strong>예산 초과 가능</strong></li>
+      <li>예산 내 RTX 3060 12GB 수준 → 13B까지만</li>
+      <li>별도 모니터/키보드 필요</li>
+      <li>이미 노트북 있는데 PC 추가 → 비용 비효율</li>
+      <li>2대 관리 부담</li>
+      <li>대형 GPU 물리적 호환 불가 가능</li>
+    </ul>
+  </div>
+</div>
+
+<h3>4.3 종합 비교표</h3>
+<table>
+  <thead><tr><th>비교 항목</th><th>eGPU (AG03)</th><th>미니PC + 외장GPU</th><th>미니PC 단독</th></tr></thead>
+  <tbody>
+    <tr><td><strong>예산 적합성</strong></td><td><span class="badge badge-good">O</span> 65만~135만 원</td><td><span class="badge badge-mid">△</span> 초과 가능</td><td><span class="badge badge-good">O</span> 49만~83만 원</td></tr>
+    <tr><td><strong>최대 VRAM</strong></td><td><strong>24GB</strong> (RTX 3090)</td><td>12~24GB</td><td>내장 GPU만</td></tr>
+    <tr><td><strong>구동 가능 모델</strong></td><td><strong>Gemma3 27B, Qwen 32B</strong></td><td>~Qwen 7B~14B</td><td>~Qwen 3B</td></tr>
+    <tr><td><strong>LLM 추론 성능</strong></td><td>데스크톱의 70~80%</td><td>데스크톱의 80~90%</td><td>매우 제한적</td></tr>
+    <tr><td><strong>상시 가동</strong></td><td><span class="badge badge-mid">△</span></td><td><span class="badge badge-good">O</span></td><td><span class="badge badge-good">O</span></td></tr>
+    <tr><td><strong>이동성</strong></td><td><span class="badge badge-good">O</span></td><td><span class="badge badge-bad">X</span></td><td><span class="badge badge-mid">△</span></td></tr>
+    <tr><td><strong>기존 장비 활용</strong></td><td><span class="badge badge-good">O</span></td><td><span class="badge badge-bad">X</span></td><td><span class="badge badge-bad">X</span></td></tr>
+    <tr><td><strong>설치 난이도</strong></td><td>하~중</td><td>상</td><td>하</td></tr>
+    <tr><td><strong>충전 지원</strong></td><td><span class="badge badge-good">100W PD</span></td><td>X</td><td>X</td></tr>
+  </tbody>
+</table>
+
+<!-- ═══════════════════════ CHAPTER 5 ═══════════════════════ -->
+<div class="chapter-header page-break">
+  <div class="chapter-num">Chapter 05</div>
+  <h2>GPU별 LLM 모델 구동 범위</h2>
+</div>
+
+<p>Q4_K_M 양자화, 8K 컨텍스트 기준으로 각 GPU에서 구동 가능한 모델을 분석한다.</p>
+
+<h3>5.1 GPU별 구동 가능 범위 요약</h3>
+<table>
+  <thead><tr><th>GPU (VRAM)</th><th>Gemma 3</th><th>Qwen 2.5 / Qwen 3</th><th>예상 속도</th></tr></thead>
+  <tbody>
+    <tr><td><strong>RTX 3060 12GB</strong></td><td>1B, 4B</td><td>0.5B ~ 7B</td><td>25~50 tok/s</td></tr>
+    <tr><td><strong>RTX 5060 Ti 16GB</strong></td><td>1B ~ <strong>12B</strong></td><td>0.5B ~ <strong>14B</strong></td><td>17~40 tok/s</td></tr>
+    <tr><td><strong>RTX 3090 24GB</strong></td><td>1B ~ <strong>27B</strong></td><td>0.5B ~ <strong>32B</strong></td><td>8~20 tok/s</td></tr>
+  </tbody>
+</table>
+
+<h3>5.2 핵심 모델별 VRAM 상세</h3>
+<table>
+  <thead><tr><th>모델</th><th>Q4_K_M 크기</th><th>필요 VRAM</th><th>최소 GPU</th><th>비고</th></tr></thead>
+  <tbody>
+    <tr><td>Gemma 3 4B</td><td>~2.5GB</td><td>~4~5GB</td><td>RTX 3060</td><td><span class="badge badge-good">여유</span></td></tr>
+    <tr><td>Gemma 3 12B</td><td>~7.5GB</td><td>~9~10GB</td><td>RTX 5060 Ti 권장</td><td><span class="badge badge-good">쾌적</span></td></tr>
+    <tr><td><strong>Gemma 3 27B</strong></td><td><strong>~16GB</strong></td><td><strong>~18~20GB</strong></td><td><strong>RTX 3090</strong></td><td><span class="badge badge-mid">짧은 ctx</span></td></tr>
+    <tr><td>Qwen 7B</td><td>~4.5GB</td><td>~6~7GB</td><td>RTX 3060</td><td><span class="badge badge-good">여유</span></td></tr>
+    <tr><td>Qwen 14B</td><td>~8.5GB</td><td>~10~12GB</td><td>RTX 5060 Ti 권장</td><td><span class="badge badge-good">쾌적</span></td></tr>
+    <tr><td><strong>Qwen 32B</strong></td><td><strong>~19GB</strong></td><td><strong>~21~23GB</strong></td><td><strong>RTX 3090</strong></td><td><span class="badge badge-mid">짧은 ctx</span></td></tr>
+    <tr><td>Qwen 72B</td><td>~42GB</td><td>~44~46GB</td><td>단일 불가</td><td><span class="badge badge-bad">듀얼 GPU 필요</span></td></tr>
+  </tbody>
+</table>
+
+<div class="box box-info">
+  <div class="box-title">&#x1F4A1; 양자화(Quantization)란?</div>
+  모델 가중치를 32비트 → 4비트로 압축하여 VRAM을 약 1/8로 줄이는 기법. Q4_K_M은 품질과 크기의 최적 균형점이다.
+</div>
+
+<!-- ═══════════════════════ CHAPTER 6 ═══════════════════════ -->
+<div class="chapter-header page-break">
+  <div class="chapter-num">Chapter 06</div>
+  <h2>추천 구성안 및 구매 가이드</h2>
+</div>
+
+<h3>6.1 구성안 A ~ D 비교</h3>
+
+<div class="rec-grid">
+  <div class="rec-card">
+    <div class="plan-name">A안 — VRAM 극대화</div>
+    <div class="plan-price">~121만 원 <small>(중고)</small></div>
+    <div class="plan-models"><strong>구동 모델:</strong> Gemma3 27B, Qwen 32B</div>
+    <ul>
+      <li>AOOSTAR AG03 (~30만~33만 원)</li>
+      <li>RTX 3090 24GB 중고 (~91만 원, 컴퓨존 AS)</li>
+    </ul>
+    <div class="mt-8"><span class="badge badge-mid">중고 — 최대 VRAM</span></div>
+  </div>
+
+  <div class="rec-card best">
+    <div class="plan-name">B안 — 신품 안정</div>
+    <div class="plan-price">~114만~139만 원</div>
+    <div class="plan-models"><strong>구동 모델:</strong> Gemma3 12B, Qwen 14B</div>
+    <ul>
+      <li>AOOSTAR AG03 (~30만~33만 원)</li>
+      <li>RTX 5060 Ti 16GB 신품 (~84만~106만 원)</li>
+    </ul>
+    <div class="mt-8"><span class="badge badge-good">신품 보증 + 예산 적합</span></div>
+  </div>
+
+  <div class="rec-card">
+    <div class="plan-name">C안 — 저예산 입문</div>
+    <div class="plan-price">~65만 원</div>
+    <div class="plan-models"><strong>구동 모델:</strong> Gemma3 4B, Qwen 7B</div>
+    <ul>
+      <li>AOOSTAR AG03 (~30만~33만 원)</li>
+      <li>RTX 3060 12GB 중고 (~35만 원)</li>
+    </ul>
+    <div class="mt-8"><span class="badge badge-mid">저예산 입문</span></div>
+  </div>
+
+  <div class="rec-card">
+    <div class="plan-name">D안 — 미니PC 독립</div>
+    <div class="plan-price">~148만 원+</div>
+    <div class="plan-models"><strong>구동 모델:</strong> Gemma3 4B, Qwen 7B</div>
+    <ul>
+      <li>UM890 Pro 32GB (~83만 원)</li>
+      <li>AG03 + RTX 3060 12GB 중고 (~65만 원)</li>
+    </ul>
+    <div class="mt-8"><span class="badge badge-mid">상시 서버용</span></div>
+  </div>
+</div>
+
+<div class="box box-warning">
+  <div class="box-title">&#x26A0; 가격 변동 안내</div>
+  위 가격은 2026년 4월 기준입니다. GPU 시세는 수급에 따라 빠르게 변동하므로, 구매 전 반드시 최신 가격을 확인하세요.
+</div>
+
+<h3 class="page-break">6.2 구성안별 부품 구매 링크</h3>
+
+<div class="box box-info">
+  <div class="box-title">&#x1F6D2; 구매 링크 안내</div>
+  아래 링크는 2026년 4월 기준 확인된 실제 판매 페이지입니다. AOOSTAR AG03는 국내 정식 유통이 없어 해외직구를 이용합니다.
+</div>
+
+<h4>AOOSTAR AG03 eGPU 독 (전 구성안 공통)</h4>
+<table class="purchase-table">
+  <thead><tr><th>부품</th><th>제품명</th><th>가격</th><th>구매 링크</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><strong>eGPU 독</strong></td>
+      <td>AOOSTAR AG03<br>(800W PSU 내장, 듀얼 TB5 + OCuLink)</td>
+      <td class="price">~$213~239<br>(~30만~33만 원)</td>
+      <td>
+        <a href="https://aoostar.com/collections/egpu-series" target="_blank">AOOSTAR 공식몰 eGPU 시리즈</a><br>
+        <a href="https://www.amazon.com/aoostar-egpu/s?k=aoostar+egpu" target="_blank">Amazon US - AOOSTAR eGPU 검색</a>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<h4>&#x1F31F; A안 (VRAM 극대화 — 추천) GPU</h4>
+<table class="purchase-table">
+  <thead><tr><th>부품</th><th>제품명</th><th>가격</th><th>구매 링크</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><strong>GPU</strong></td>
+      <td>RTX 3090 24GB (중고, 6개월 AS)</td>
+      <td class="price">~91만 원</td>
+      <td>
+        <a href="https://www.compuzone.co.kr/product/product_detail.htm?ProductNo=1118480" target="_blank">컴퓨존 - RTX 3090 중고 (6개월 AS)</a>
+      </td>
+    </tr>
+    <tr>
+      <td><strong>GPU (대안)</strong></td>
+      <td>RTX 3090 24GB (중고)</td>
+      <td class="price">~120만 원+</td>
+      <td>
+        <a href="https://web.joongna.com/search/RTX%203090%2024GB" target="_blank">중고나라 검색</a><br>
+        <a href="https://m.bunjang.co.kr/search/products?q=rtx+3090" target="_blank">번개장터 검색</a>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<p class="small">※ A안 합계: AG03 ~30만 원 + RTX 3090 ~91만 원 = <strong>약 121만 원 (예산 범위 내)</strong></p>
+
+<h4>B안 (신품 안정) GPU</h4>
+<table class="purchase-table">
+  <thead><tr><th>부품</th><th>제품명</th><th>가격</th><th>구매 링크</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><strong>GPU</strong></td>
+      <td>RTX 5060 Ti 16GB<br>(ZOTAC Twin Edge / PALIT INFINITY 3 / GALAX BLACK OC 등)</td>
+      <td class="price">~84만~106만 원</td>
+      <td>
+        <a href="https://prod.danawa.com/list/?cate=11455506" target="_blank">다나와 - RTX 5060 Ti 가격비교</a><br>
+        <a href="https://search.danawa.com/dsearch.php?query=RTX+5060+Ti+16GB" target="_blank">다나와 - RTX 5060 Ti 16GB 검색</a>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<p class="small">※ B안 합계: AG03 ~30만~33만 원 + RTX 5060 Ti ~84만~106만 원 = <strong>약 114만~139만 원</strong></p>
+
+<h4>C안 (저예산 입문) GPU</h4>
+<table class="purchase-table">
+  <thead><tr><th>부품</th><th>제품명</th><th>가격</th><th>구매 링크</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><strong>GPU</strong></td>
+      <td>RTX 3060 12GB (중고/신품)</td>
+      <td class="price">중고 ~35만 원<br>신품 ~59만 원</td>
+      <td>
+        <a href="https://search.danawa.com/dsearch.php?query=rtx+3060+12gb" target="_blank">다나와 검색</a><br>
+        <a href="https://web.joongna.com/search/RTX%203060%2012GB" target="_blank">중고나라 검색</a>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<h4>D안 (미니PC 독립) 미니PC</h4>
+<table class="purchase-table">
+  <thead><tr><th>부품</th><th>제품명</th><th>가격</th><th>구매 링크</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><strong>미니PC</strong></td>
+      <td>Minisforum UM890 Pro 32GB</td>
+      <td class="price">~83만 원</td>
+      <td>
+        <a href="https://www.minisforum.kr/products/minisforum-um890-pro" target="_blank">Minisforum 한국 공식몰</a><br>
+        <a href="https://store.minisforum.com/products/minisforum-um890pro" target="_blank">Minisforum 글로벌 ($439)</a>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<h4>참고: ADT-Link R43SG-TB3 (대안 eGPU 독)</h4>
+<table class="purchase-table">
+  <thead><tr><th>부품</th><th>가격</th><th>구매 링크</th><th>비고</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><strong>ADT-Link R43SG-TB3</strong></td>
+      <td class="price">~23만 원 (~$142)</td>
+      <td>
+        <a href="https://www.aliexpress.com/item/4000340228749.html" target="_blank">AliExpress 공식 스토어</a><br>
+        <a href="https://www.amazon.com/R43SG-TB3-Extension-External-Graphics-PCI-Express/dp/B08HCF59FJ" target="_blank">Amazon US</a>
+      </td>
+      <td>별도 ATX PSU (~5.5만 원) 필요.<br>합계 ~28.5만 원. PD 미지원.</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- ═══════════════════════ CHAPTER 7 ═══════════════════════ -->
+<div class="chapter-header page-break">
+  <div class="chapter-num">Chapter 07</div>
+  <h2>최종 추천 및 구매 로드맵</h2>
+</div>
+
+<h3>7.1 최종 추천</h3>
+<div class="box box-success">
+  <div class="box-title">&#x1F3C6; 최종 추천: B안 (AOOSTAR AG03 + RTX 5060 Ti 16GB 신품)</div>
+  <table>
+    <tbody>
+      <tr><td><strong>총 비용</strong></td><td><strong>약 114만~139만 원</strong> (예산 범위 내)</td></tr>
+      <tr><td><strong>eGPU 독</strong></td><td>AOOSTAR AG03 (800W PSU 내장, 듀얼 TB5, ~$213~239)</td></tr>
+      <tr><td><strong>GPU</strong></td><td>RTX 5060 Ti 16GB 신품 (~84만~106만 원) — Blackwell, 제조사 보증</td></tr>
+      <tr><td><strong>VRAM</strong></td><td>16GB (GDDR7, 448GB/s)</td></tr>
+      <tr><td><strong>구동 가능 모델</strong></td><td>Gemma 3 12B, Qwen 14B (Q4_K_M 쾌적) / Gemma 3 27B (Q3_K_M, 빠듯)</td></tr>
+      <tr><td><strong>예상 속도</strong></td><td>17~40 tok/s (12B~14B 기준, Blackwell 15% 향상)</td></tr>
+      <tr><td><strong>연결</strong></td><td>Galaxy Book4 Pro TB4 → AG03 TB5 (하위호환 40Gbps + 140W PD 충전)</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<p><strong>B안 추천 이유:</strong></p>
+<ul style="margin-left: 20px; margin-bottom: 16px;">
+  <li><strong>신품 GPU → 제조사 보증</strong>, 채굴 이력·고장 리스크 없음</li>
+  <li>Blackwell 아키텍처 + GDDR7 → 4060 Ti 대비 15% 성능 향상, 전력 효율 우수</li>
+  <li>16GB VRAM으로 Gemma 3 12B, Qwen 14B를 쾌적하게 구동</li>
+  <li>AOOSTAR AG03의 800W PSU + 140W PD → 케이블 1개로 GPU + 충전 동시</li>
+  <li>AG03 듀얼 TB5 → 차세대 TB5 노트북 업그레이드 시 대역폭 80Gbps로 2배 향상</li>
+  <li>예산 100~150만 원 범위에 정확히 맞는 안정적 구성</li>
+  <li>추후 GPU만 교체하면 업그레이드 가능 (AG03 재활용)</li>
+</ul>
+
+<div class="box box-info">
+  <div class="box-title">&#x1F4DD; 더 큰 모델이 필요하다면 A안도 고려</div>
+  Gemma 3 27B, Qwen 32B급 모델이 반드시 필요하다면 <strong>A안(AG03 + RTX 3090 24GB 중고, ~121만 원)</strong>을 고려하세요.
+  컴퓨존에서 6개월 AS 포함 중고를 구매하면 리스크를 줄일 수 있습니다.
+  단, 중고 GPU의 채굴 이력, 잔여 수명 등 리스크는 감수해야 합니다.
+</div>
+
+<h3>7.2 구매 로드맵</h3>
+<div class="flow">
+  <div class="flow-step done">&#x2705; 노트북 확인<br><span class="small">TB4/USB4 확인</span></div>
+  <div class="flow-arrow">&#x27A1;</div>
+  <div class="flow-step current">&#x1F6D2; AG03 주문<br><span class="small">AOOSTAR/Amazon</span></div>
+  <div class="flow-arrow">&#x27A1;</div>
+  <div class="flow-step">&#x1F3AE; GPU 구매<br><span class="small">RTX 5060 Ti 16GB</span></div>
+  <div class="flow-arrow">&#x27A1;</div>
+  <div class="flow-step">&#x1F9EA; GPU 장착<br><span class="small">AG03에 꽂기</span></div>
+  <div class="flow-arrow">&#x27A1;</div>
+  <div class="flow-step">&#x1F50C; USB4 연결<br><span class="small">드라이버 설치</span></div>
+  <div class="flow-arrow">&#x27A1;</div>
+  <div class="flow-step">&#x1F680; Ollama 실행<br><span class="small">Gemma3 12B!</span></div>
+</div>
+
+<h3>7.3 중고 GPU 구매 시 주의사항</h3>
+<table>
+  <thead><tr><th>체크 항목</th><th>확인 방법</th></tr></thead>
+  <tbody>
+    <tr><td><strong>채굴 이력</strong></td><td>GPU-Z로 사용 시간 확인 (10,000시간 이상이면 채굴 가능성)</td></tr>
+    <tr><td><strong>외관 상태</strong></td><td>팬 소음, 히트싱크 변색, 커넥터 핀 상태 육안 확인</td></tr>
+    <tr><td><strong>벤치마크</strong></td><td>3DMark 또는 FurMark로 성능·온도 테스트</td></tr>
+    <tr><td><strong>보증 여부</strong></td><td>컴퓨존: 6개월 AS 포함 / 개인거래: 보증 없음 주의</td></tr>
+    <tr><td><strong>거래 방식</strong></td><td>직거래 권장, 택배 시 안전결제(에스크로) 사용</td></tr>
+  </tbody>
+</table>
+
+<h3>7.4 향후 업그레이드 경로</h3>
+<table>
+  <thead><tr><th>시점</th><th>업그레이드</th><th>효과</th></tr></thead>
+  <tbody>
+    <tr><td><strong>현재</strong></td><td>B안 (AG03 + RTX 5060 Ti 16GB 신품)</td><td>Gemma3 12B, Qwen 14B 쾌적 구동</td></tr>
+    <tr><td><strong>중기</strong></td><td>GPU를 RTX 3090 24GB 등으로 교체</td><td>Gemma3 27B, Qwen 32B 구동</td></tr>
+    <tr><td><strong>장기</strong></td><td>RTX 50 시리즈 24GB+로 교체</td><td>더 큰 모델, 더 긴 컨텍스트, 더 빠른 속도</td></tr>
+    <tr><td><strong>OCuLink 노트북</strong></td><td>AG03의 OCuLink 포트 활용</td><td>64Gbps 대역폭으로 성능 향상</td></tr>
+  </tbody>
+</table>
+
+<div class="box box-info mt-16">
+  <div class="box-title">&#x1F4DD; 소프트웨어 빠른 시작</div>
+  <ol style="margin-left: 16px; font-size: 9.5pt;">
+    <li><strong>NVIDIA 드라이버</strong> — nvidia.com에서 최신 Game Ready 드라이버 설치</li>
+    <li><strong>Ollama 설치</strong> — ollama.com에서 Windows 버전 다운로드</li>
+    <li><strong>모델 실행</strong> —
+      <code style="background:#f0f0f0; padding:2px 6px; border-radius:3px; font-size:9pt;">ollama run gemma3:12b</code> 또는
+      <code style="background:#f0f0f0; padding:2px 6px; border-radius:3px; font-size:9pt;">ollama run qwen2.5:14b</code>
+    </li>
+    <li><strong>웹 UI</strong> — Open WebUI 설치로 ChatGPT 유사 인터페이스 사용 가능</li>
+  </ol>
+</div>
+
+<div class="footer">
+  <p>본 보고서의 가격 정보는 2026년 4월 6일 기준이며, 시세 변동에 따라 달라질 수 있습니다.</p>
+  <p>가격 출처: AOOSTAR 공식몰, Amazon, 다나와, 컴퓨존, 중고나라, 번개장터</p>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>은행회계해설 AI</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-top">
+                <h1>은행회계해설 AI</h1>
+                <div class="mode-selector">
+                    <label class="mode-option">
+                        <input type="radio" name="mode" value="local" checked>
+                        <span class="mode-label">로컬</span>
+                    </label>
+                    <label class="mode-option">
+                        <input type="radio" name="mode" value="gemini">
+                        <span class="mode-label">Gemini</span>
+                    </label>
+                    <label class="mode-option">
+                        <input type="radio" name="mode" value="openai">
+                        <span class="mode-label">OpenAI</span>
+                    </label>
+                </div>
+            </div>
+            <p class="subtitle">은행회계해설(상/하) 2018개정판 기반 질의응답 서비스</p>
+            <p class="mode-status" id="mode-status"></p>
+        </header>
+
+        <div id="chat-box">
+            <div class="message assistant">
+                <div class="message-content">
+                    안녕하세요! 은행회계해설에 대해 궁금한 점을 질문해주세요.
+                </div>
+            </div>
+        </div>
+
+        <div class="input-area">
+            <textarea id="query-input" placeholder="질문을 입력하세요..." rows="1"
+                      onkeydown="handleKeyDown(event)"></textarea>
+            <button id="send-btn" onclick="sendMessage()">전송</button>
+        </div>
+    </div>
+
+    <script>
+        const chatBox = document.getElementById('chat-box');
+        const queryInput = document.getElementById('query-input');
+        const sendBtn = document.getElementById('send-btn');
+        const modeStatus = document.getElementById('mode-status');
+        let conversationHistory = [];
+
+        // 모드 초기화
+        document.addEventListener('DOMContentLoaded', loadModeInfo);
+
+        async function loadModeInfo() {
+            try {
+                const res = await fetch('/get_mode');
+                const data = await res.json();
+                // 현재 모드 선택
+                const radio = document.querySelector(`input[name="mode"][value="${data.current_mode}"]`);
+                if (radio) radio.checked = true;
+                // 사용 불가 모드 비활성화
+                for (const [mode, info] of Object.entries(data.modes)) {
+                    const option = document.querySelector(`input[name="mode"][value="${mode}"]`);
+                    if (!option) continue;
+                    const label = option.closest('.mode-option');
+                    if (!info.available) {
+                        option.disabled = true;
+                        label.classList.add('disabled');
+                        let reason = '';
+                        if (!info.has_api_key) reason = 'API 키 없음';
+                        else if (!info.has_vectordb) reason = '벡터 DB 없음';
+                        label.title = reason;
+                    } else {
+                        option.disabled = false;
+                        label.classList.remove('disabled');
+                        label.title = '';
+                    }
+                }
+                updateModeStatus(data.current_mode);
+            } catch (e) {
+                modeStatus.textContent = '모드 정보 로딩 실패';
+            }
+        }
+
+        function updateModeStatus(mode) {
+            const names = { local: '로컬 (Ollama)', gemini: 'Gemini API', openai: 'OpenAI API' };
+            modeStatus.textContent = `현재: ${names[mode] || mode}`;
+        }
+
+        // 모드 변경
+        document.querySelectorAll('input[name="mode"]').forEach(radio => {
+            radio.addEventListener('change', async function() {
+                const mode = this.value;
+                try {
+                    const res = await fetch('/set_mode', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ mode })
+                    });
+                    const data = await res.json();
+                    if (data.error) {
+                        alert(data.error);
+                        loadModeInfo();
+                        return;
+                    }
+                    updateModeStatus(mode);
+                    // 모드 변경 알림
+                    const names = { local: '로컬 (Ollama)', gemini: 'Gemini API', openai: 'OpenAI API' };
+                    appendMessage('assistant',
+                        `<em>${names[mode]} 모드로 전환되었습니다.</em>`);
+                } catch (e) {
+                    alert('모드 변경 실패: ' + e.message);
+                    loadModeInfo();
+                }
+            });
+        });
+
+        function handleKeyDown(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        }
+
+        // 자동 높이 조절
+        queryInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+        });
+
+        function appendMessage(role, content) {
+            const div = document.createElement('div');
+            div.className = `message ${role}`;
+            div.innerHTML = `<div class="message-content">${content}</div>`;
+            chatBox.appendChild(div);
+            chatBox.scrollTop = chatBox.scrollHeight;
+            return div.querySelector('.message-content');
+        }
+
+        function appendSources(container, sources) {
+            if (!sources || sources.length === 0) return;
+            // 중복 제거
+            const unique = [];
+            const seen = new Set();
+            for (const s of sources) {
+                const key = `${s.volume}-${s.page}`;
+                if (!seen.has(key)) {
+                    seen.add(key);
+                    unique.push(s);
+                }
+            }
+            const sourceHtml = unique
+                .map(s => `은행회계해설(${s.volume}) p.${s.page}`)
+                .join(', ');
+            const div = document.createElement('div');
+            div.className = 'sources';
+            div.textContent = `📖 참고: ${sourceHtml}`;
+            container.parentElement.appendChild(div);
+        }
+
+        async function sendMessage() {
+            const query = queryInput.value.trim();
+            if (!query) return;
+
+            // UI 상태
+            queryInput.value = '';
+            queryInput.style.height = 'auto';
+            sendBtn.disabled = true;
+            sendBtn.textContent = '응답 중...';
+
+            // 사용자 메시지
+            appendMessage('user', escapeHtml(query));
+
+            // 어시스턴트 응답 영역
+            const contentEl = appendMessage('assistant', '');
+            let fullResponse = '';
+
+            try {
+                const response = await fetch('/stream', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        query: query,
+                        history: conversationHistory.slice(-6)  // 최근 3턴
+                    })
+                });
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+                let sources = null;
+
+                while (true) {
+                    const {done, value} = await reader.read();
+                    if (done) break;
+
+                    buffer += decoder.decode(value, {stream: true});
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop();
+
+                    for (const line of lines) {
+                        if (!line.startsWith('data: ')) continue;
+                        try {
+                            const data = JSON.parse(line.slice(6));
+                            if (data.error) {
+                                contentEl.textContent = `오류: ${data.error}`;
+                                break;
+                            }
+                            if (data.token) {
+                                fullResponse += data.token;
+                                contentEl.innerHTML = formatMarkdown(fullResponse);
+                                chatBox.scrollTop = chatBox.scrollHeight;
+                            }
+                            if (data.done) {
+                                sources = data.sources;
+                            }
+                        } catch (e) {}
+                    }
+                }
+
+                if (sources) {
+                    appendSources(contentEl, sources);
+                }
+
+                // 대화 이력 저장
+                conversationHistory.push(
+                    {role: 'user', content: query},
+                    {role: 'assistant', content: fullResponse}
+                );
+
+            } catch (err) {
+                contentEl.textContent = `연결 오류: ${err.message}`;
+            }
+
+            sendBtn.disabled = false;
+            sendBtn.textContent = '전송';
+            queryInput.focus();
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatMarkdown(text) {
+            // 간단한 마크다운 변환
+            let html = escapeHtml(text);
+            // 코드 블록
+            html = html.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
+            // 인라인 코드
+            html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+            // 볼드
+            html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+            // 줄바꿈
+            html = html.replace(/\n/g, '<br>');
+            return html;
+        }
+    </script>
+</body>
+</html>

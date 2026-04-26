@@ -8,34 +8,46 @@ This is a personal development repository containing standalone Python and C++ p
 
 ## Projects
 
-### Python Games (requires pygame)
-- **breakout.py**: Breakout-style brick breaker game
-- **lottery_ball.py**: Ball-drop lottery/drawing game with physics simulation
-- **number_game.py**: Console-based number guessing game
+### Python Games — `python_games/` (requires pygame)
+- **python_games/breakout.py**: Breakout-style brick breaker game
+- **python_games/lottery_ball.py**: Ball-drop lottery/drawing game with physics simulation
 
-### News Scraping (requires Flask, requests, feedparser, beautifulsoup4)
-- **news_web_app.py**: Flask web app for aggregating news from Google News and Naver
-- **news_scraper.ipynb**: Jupyter notebook version of the news scraper
-- **templates/index.html**: Jinja2 template for the Flask app
+### Number Game — `number_game/`
+- **number_game/number_game.py**: Console-based number guessing game (Python)
+- **number_game/number_game.cpp**: Number guessing game (C++, Windows, uses windows.h)
 
-### C++ Programs
-- **number_game.cpp**: Number guessing game (Windows, uses windows.h)
-- **sum.cpp**: Simple sum calculator (Windows)
+### News Scraping — `news_scraper/` (requires Flask, requests, feedparser, beautifulsoup4)
+- **news_scraper/news_web_app.py**: Flask web app for aggregating news from Google News and Naver
+- **news_scraper/news_scraper.ipynb**: Jupyter notebook version of the news scraper
+- **news_scraper/templates/index.html**: Jinja2 template for the Flask app
+
+### C++ Programs — `cpp_programs/`
+- **cpp_programs/sum.cpp**: Simple sum calculator (Windows)
+
+### Search Algorithms — `search_algorithms/`
+- **search_algorithms/search_algorithms.py**: Python implementations
+- **search_algorithms/SearchAlgorithms.java**: Java implementations
+
+### Misc Scripts — `misc_scripts/`
+- **misc_scripts/calculator.py**, **test_popup.py**
+
+### Ilyong Code — `ilyongcode/`
+- **ilyongcode/run_ilyongcode.sh**: 로컬 Ollama qwen2.5-coder 모델로 aider 실행 (배너 포함)
 
 ## Running Applications
 
 ```bash
 # Python games
-python breakout.py
-python lottery_ball.py
-python number_game.py
+python python_games/breakout.py
+python python_games/lottery_ball.py
+python number_game/number_game.py
 
 # Flask web app (runs on localhost:5000)
-python news_web_app.py
+python news_scraper/news_web_app.py
 
 # C++ compilation (Windows/MinGW)
-g++ number_game.cpp -o number_game.exe
-g++ sum.cpp -o sum.exe
+g++ number_game/number_game.cpp -o number_game/number_game.exe
+g++ cpp_programs/sum.cpp -o cpp_programs/sum.exe
 ```
 
 ## Technical Notes

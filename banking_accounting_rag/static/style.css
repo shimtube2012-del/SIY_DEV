@@ -1,0 +1,233 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+    background: #f0f2f5;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+}
+
+.container {
+    width: 100%;
+    max-width: 800px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.08);
+}
+
+header {
+    padding: 16px 24px;
+    background: #1a56db;
+    color: #fff;
+}
+
+.header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+header h1 {
+    font-size: 20px;
+    font-weight: 600;
+}
+
+header .subtitle {
+    font-size: 12px;
+    opacity: 0.8;
+    margin-top: 4px;
+}
+
+.mode-status {
+    font-size: 11px;
+    opacity: 0.7;
+    margin-top: 2px;
+}
+
+/* 모드 선택 */
+.mode-selector {
+    display: flex;
+    gap: 4px;
+}
+
+.mode-option {
+    cursor: pointer;
+}
+
+.mode-option input[type="radio"] {
+    display: none;
+}
+
+.mode-label {
+    display: inline-block;
+    padding: 4px 10px;
+    font-size: 12px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.8);
+    transition: all 0.2s;
+    border: 1px solid transparent;
+}
+
+.mode-option input[type="radio"]:checked + .mode-label {
+    background: #fff;
+    color: #1a56db;
+    font-weight: 600;
+}
+
+.mode-option:hover .mode-label {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.mode-option input[type="radio"]:checked + .mode-label:hover {
+    background: #fff;
+}
+
+.mode-option.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.mode-option.disabled .mode-label {
+    cursor: not-allowed;
+}
+
+#chat-box {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.message {
+    display: flex;
+    flex-direction: column;
+    max-width: 85%;
+}
+
+.message.user {
+    align-self: flex-end;
+}
+
+.message.assistant {
+    align-self: flex-start;
+}
+
+.message-content {
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-size: 14px;
+    line-height: 1.7;
+    word-break: break-word;
+}
+
+.message.user .message-content {
+    background: #1a56db;
+    color: #fff;
+    border-bottom-right-radius: 4px;
+}
+
+.message.assistant .message-content {
+    background: #f3f4f6;
+    color: #1f2937;
+    border-bottom-left-radius: 4px;
+}
+
+.message-content code {
+    background: rgba(0, 0, 0, 0.06);
+    padding: 2px 5px;
+    border-radius: 3px;
+    font-size: 13px;
+}
+
+.message-content pre {
+    background: #1f2937;
+    color: #e5e7eb;
+    padding: 12px;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 8px 0;
+}
+
+.message-content pre code {
+    background: none;
+    padding: 0;
+    color: inherit;
+}
+
+.sources {
+    font-size: 12px;
+    color: #6b7280;
+    margin-top: 6px;
+    padding: 6px 12px;
+    background: #f9fafb;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+}
+
+.input-area {
+    padding: 16px 20px;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+    background: #fff;
+}
+
+#query-input {
+    flex: 1;
+    padding: 10px 14px;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    font-size: 14px;
+    font-family: inherit;
+    resize: none;
+    outline: none;
+    line-height: 1.5;
+    max-height: 120px;
+}
+
+#query-input:focus {
+    border-color: #1a56db;
+    box-shadow: 0 0 0 2px rgba(26, 86, 219, 0.15);
+}
+
+#send-btn {
+    padding: 10px 20px;
+    background: #1a56db;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-family: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+#send-btn:hover {
+    background: #1e40af;
+}
+
+#send-btn:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+}
+
+/* 스크롤바 */
+#chat-box::-webkit-scrollbar {
+    width: 6px;
+}
+
+#chat-box::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 3px;
+}
